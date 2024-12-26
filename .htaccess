@@ -1,0 +1,48 @@
+# Enable rewrite engine
+RewriteEngine On
+
+# Set the base directory for rewrites
+RewriteBase /
+
+# Redirect all requests to index.php except for existing files or directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?request=$1 [QSA,L]
+
+# Prevent directory listing
+Options -Indexes
+
+# Set default character set
+AddDefaultCharset UTF-8
+
+# Set some security headers
+<IfModule mod_headers.c>
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-Content-Type-Options "nosniff"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+</IfModule>
+
+# Prevent access to sensitive files
+<FilesMatch "(\.(bak|config|dist|fla|inc|ini|log|psd|sh|sql|swp)|~)$">
+    Order allow,deny
+    Deny from all
+    Satisfy All
+</FilesMatch>
+
+# Prevent PHP files from being executed inside the uploads directory
+<IfModule mod_rewrite.c>
+    RewriteRule ^uploads/.*\.(?:php[1-7]?|pht|phtml?|phps)$ - [NC,F]
+</IfModule>
+
+# Enable PHP error logging
+php_flag log_errors on
+php_value error_log logs/php_errors.log
+
+# Increase max upload file size to 8MB (adjust as needed)
+php_value upload_max_filesize 8M
+php_value post_max_size 8M
+
+# Disable server signature
+ServerSignature Off
